@@ -37,4 +37,3 @@ jobs:
               -H "X-Authorization: $AUTH_TOKEN" \
               -d @"payload_$fn.json" &
           done
-          wait
