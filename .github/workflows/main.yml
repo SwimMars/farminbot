@@ -28,26 +28,13 @@ jobs:
             "AuthenticationContext": null
           }' > payload.json
 
-      - name: Call startNewMatch
+      - name: Call all functions in parallel
         run: |
-          jq --arg fn startNewMatch '. + {FunctionName: $fn}' payload.json > payload_start.json
-          curl -X POST "$API_URL" \
-            -H "Content-Type: application/json" \
-            -H "X-Authorization: $AUTH_TOKEN" \
-            -d @payload_start.json
-
-      - name: Call decideSpecialRole
-        run: |
-          jq --arg fn decideSpecialRole '. + {FunctionName: $fn}' payload.json > payload_decide.json
-          curl -X POST "$API_URL" \
-            -H "Content-Type: application/json" \
-            -H "X-Authorization: $AUTH_TOKEN" \
-            -d @payload_decide.json
-
-      - name: Call finishMatch
-        run: |
-          jq --arg fn finishMatch '. + {FunctionName: $fn}' payload.json > payload_finish.json
-          curl -X POST "$API_URL" \
-            -H "Content-Type: application/json" \
-            -H "X-Authorization: $AUTH_TOKEN" \
-            -d @payload_finish.json
+          for fn in startNewMatch decideSpecialRole finishMatch; do
+            jq --arg fn "$fn" '. + {FunctionName: $fn}' payload.json > "payload_$fn.json"
+            curl -X POST "$API_URL" \
+              -H "Content-Type: application/json" \
+              -H "X-Authorization: $AUTH_TOKEN" \
+              -d @"payload_$fn.json" &
+          done
+          wait
